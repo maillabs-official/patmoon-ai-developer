@@ -1,0 +1,27 @@
+name: PATMOON Virtual Simulation
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'simulator.py'
+      - 'test_simulator.py'
+      - '.github/workflows/simulate.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests
+        run: python -m unittest -v test_simulator
+      - name: Run virtual simulation
+        run: python simulator.py > report.json
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: patmoon-virtual-report
+          path: report.json
