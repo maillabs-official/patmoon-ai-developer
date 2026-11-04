@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'simulator.py'
-      - 'telegram_report.py'
-      - 'test_simulator.py'
+      - '*.py'
       - '.github/workflows/simulate.yml'
+  schedule:
+    - cron: '0 23 * * *'
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -18,16 +18,21 @@ jobs:
         with:
           python-version: '3.12'
       - name: Unit tests
-        run: python -m unittest -v test_simulator
-      - name: Run virtual simulation
+        run: python -m unittest discover -v
+      - name: Virtual simulation
         run: python simulator.py > report.json
-      - name: Optional Telegram report
+      - name: Public trend report
+        run: python daily_report.py > trends.txt
+      - name: Optional Telegram simulation report
+        if: github.event_name == 'workflow_dispatch'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python telegram_report.py
-      - name: Upload report
+      - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
-          name: patmoon-virtual-report
-          path: report.json
+          name: patmoon-virtual-reports
+          path: |
+            report.json
+            trends.txt
